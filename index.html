@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a0e1a">
@@ -54,7 +54,7 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 
 /* Detail View */
 .detail-view{display:none}
-.detail-view.active{display:flex}
+.detail-view.active{display:block}
 .list-view.hidden{display:none}
 .detail-header{flex-shrink:0;padding:12px 16px;background:var(--bg);display:flex;align-items:center;gap:12px}
 .back-btn{background:none;border:none;color:var(--accent);font-size:28px;cursor:pointer;padding:4px;line-height:1}
@@ -94,6 +94,8 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:#2a3050;border-radius:4px}
 @media(max-width:380px){.app-title{font-size:24px}.proto-card{padding:12px}}
+.detail-view,.content-area,.detail-content{-webkit-overflow-scrolling:touch;touch-action:pan-y;}
+html{overflow-y:scroll;}
 </style>
 </head>
 <body>
