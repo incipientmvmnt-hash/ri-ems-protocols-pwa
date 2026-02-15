@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0e1a">
+<title>RI EMS Protocols</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+--bg:#0a0e1a;--card:#141929;--card-hover:#1a2035;--text:#ffffff;--text2:#8b92a8;
+--accent:#d9534f;--emt:#f0ad4e;--aemt:#34c759;--aemtc:#007aff;--para:#d9534f;--mc:#8b92a8;
+--radius:12px;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column;padding-top:var(--safe-top);padding-bottom:var(--safe-bottom)}
+.header{flex-shrink:0;padding:16px 16px 0;background:var(--bg);z-index:10}
+.app-title{font-size:28px;font-weight:800;letter-spacing:-0.5px}
+.app-subtitle{font-size:13px;color:var(--text2);margin-top:2px}
+.search-wrap{position:relative;margin:14px 0 10px}
+.search-wrap input{width:100%;padding:12px 16px 12px 42px;background:#1c2137;border:1px solid transparent;border-radius:var(--radius);color:var(--text);font-size:16px;outline:none;transition:border .2s}
+.search-wrap input:focus{border-color:var(--accent)}
+.search-wrap input::placeholder{color:var(--text2)}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:18px;pointer-events:none}
+.clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;display:none;padding:4px 8px}
+.pills{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none;-ms-overflow-style:none}
+.pills::-webkit-scrollbar{display:none}
+.pill{flex-shrink:0;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #2a3050;background:transparent;color:var(--text2);transition:all .2s}
+.pill.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.pill[data-level="EMT"].active{background:var(--emt);border-color:var(--emt);color:#000}
+.pill[data-level="AEMT"].active{background:var(--aemt);border-color:var(--aemt);color:#000}
+.pill[data-level="AEMT-C"].active{background:var(--aemtc);border-color:var(--aemtc);color:#fff}
+.pill[data-level="Paramedic"].active{background:var(--para);border-color:var(--para);color:#fff}
+.content-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 100px}
+.section-header{font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;padding:20px 0 8px}
+.proto-card{background:var(--card);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:background .2s,transform .1s;display:flex;align-items:flex-start;gap:12px}
+.proto-card:active{transform:scale(0.98);background:var(--card-hover)}
+.proto-id{font-size:15px;font-weight:800;color:var(--accent);min-width:44px;flex-shrink:0}
+.proto-info{flex:1;min-width:0}
+.proto-title{font-size:15px;font-weight:600;line-height:1.3}
+.proto-badges{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;letter-spacing:0.3px}
+.badge-E{background:var(--emt);color:#000}
+.badge-A{background:var(--aemt);color:#000}
+.badge-C{background:var(--aemtc);color:#fff}
+.badge-P{background:var(--para);color:#fff}
+.search-snippet{font-size:13px;color:var(--text2);margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.search-snippet mark{background:rgba(217,83,79,0.3);color:var(--text);border-radius:2px;padding:0 1px}
+.chevron{color:var(--text2);font-size:18px;flex-shrink:0;align-self:center}
+
+/* Detail View */
+.detail-view{display:none;flex-direction:column;height:100%}
+.detail-view.active{display:flex}
+.list-view.hidden{display:none}
+.detail-header{flex-shrink:0;padding:12px 16px;background:var(--bg);display:flex;align-items:center;gap:12px}
+.back-btn{background:none;border:none;color:var(--accent);font-size:28px;cursor:pointer;padding:4px;line-height:1}
+.detail-title-wrap{flex:1;min-width:0}
+.detail-id{font-size:14px;font-weight:800;color:var(--accent)}
+.detail-title{font-size:18px;font-weight:700;line-height:1.2;margin-top:2px}
+.detail-badges{display:flex;gap:4px;margin-top:4px}
+.detail-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 100px}
+.detail-body{font-size:15px;line-height:1.7;color:var(--text);padding:12px 0}
+.detail-body .section-label{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;margin:16px 0 8px;letter-spacing:0.3px}
+.detail-body .sl-emt{background:var(--emt);color:#000}
+.detail-body .sl-aemt{background:var(--aemt);color:#000}
+.detail-body .sl-aemtc{background:var(--aemtc);color:#fff}
+.detail-body .sl-para{background:var(--para);color:#fff}
+.detail-body .sl-mc{background:var(--mc);color:#fff}
+.detail-body .inline-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;margin-right:4px;vertical-align:middle}
+.detail-body .ib-E{background:var(--emt);color:#000}
+.detail-body .ib-A{background:var(--aemt);color:#000}
+.detail-body .ib-C{background:var(--aemtc);color:#fff}
+.detail-body .ib-P{background:var(--para);color:#fff}
+.detail-body ul{list-style:none;padding-left:0;margin:4px 0}
+.detail-body li{padding:3px 0 3px 18px;position:relative}
+.detail-body li::before{content:'';position:absolute;left:4px;top:12px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.detail-body li.sub{padding-left:34px}
+.detail-body li.sub::before{left:20px;width:5px;height:5px;background:var(--text2)}
+.caution-block{background:rgba(217,83,79,0.12);border-left:3px solid var(--accent);border-radius:6px;padding:10px 14px;margin:10px 0;font-weight:600}
+.note-block{background:rgba(0,122,255,0.1);border-left:3px solid var(--aemtc);border-radius:6px;padding:10px 14px;margin:10px 0}
+.pearls-block{background:rgba(52,199,89,0.1);border-left:3px solid var(--aemt);border-radius:6px;padding:10px 14px;margin:10px 0}
+.proto-link{color:var(--aemtc);text-decoration:none;font-weight:600;cursor:pointer}
+.proto-link:hover{text-decoration:underline}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text2)}
+.empty-state .emoji{font-size:48px;margin-bottom:12px}
+.empty-state p{font-size:15px}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#2a3050;border-radius:4px}
+@media(max-width:380px){.app-title{font-size:24px}.proto-card{padding:12px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="list-view" id="listView">
+    <div class="header">
+      <div class="app-title">🚑 RI EMS Protocols</div>
+      <div class="app-subtitle">Rhode Island Statewide Protocols · v2024.01</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search protocols..." autocomplete="off" autocorrect="off" spellcheck="false">
+        <button class="clear-btn" id="clearBtn">✕</button>
+      </div>
+      <div class="pills" id="pills"></div>
+    </div>
+    <div class="content-area" id="listContent"></div>
+  </div>
+  <div class="detail-view" id="detailView">
+    <div class="detail-header">
+      <button class="back-btn" id="backBtn">‹</button>
+      <div class="detail-title-wrap">
+        <div class="detail-id" id="detailId"></div>
+        <div class="detail-title" id="detailTitle"></div>
+        <div class="detail-badges" id="detailBadges"></div>
+      </div>
+    </div>
+    <div class="detail-content">
+      <div class="detail-body" id="detailBody"></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+let protocols=[], filtered=[], activeLevel='All', searchQuery='', currentProto=null;
+const LEVELS=['All','EMT','AEMT','AEMT-C','Paramedic'];
+const LEVEL_MAP={E:'EMT',A:'AEMT',C:'AEMT-C',P:'Paramedic'};
+const LEVEL_KEY={EMT:'E',AEMT:'A','AEMT-C':'C',Paramedic:'P'};
+const $=s=>document.querySelector(s);
+
+// Init
+fetch('protocols.json').then(r=>r.json()).then(data=>{protocols=data;render()});
+
+// Pills
+const pillsEl=$('#pills');
+LEVELS.forEach(l=>{
+  const b=document.createElement('button');
+  b.className='pill'+(l==='All'?' active':'');
+  b.dataset.level=l;
+  b.textContent=l;
+  b.onclick=()=>{
+    pillsEl.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+    b.classList.add('active');
+    activeLevel=l;
+    render();
+  };
+  pillsEl.appendChild(b);
+});
+
+// Search
+const searchInput=$('#searchInput'), clearBtn=$('#clearBtn');
+searchInput.addEventListener('input',()=>{
+  searchQuery=searchInput.value.trim();
+  clearBtn.style.display=searchQuery?'block':'none';
+  render();
+});
+clearBtn.onclick=()=>{searchInput.value='';searchQuery='';clearBtn.style.display='none';render();searchInput.focus()};
+
+function matchLevel(proto){
+  if(activeLevel==='All')return true;
+  const k=LEVEL_KEY[activeLevel];
+  return proto.provider_levels&&proto.provider_levels.includes(k);
+}
+
+function getSnippet(content,query){
+  if(!query)return'';
+  const lower=content.toLowerCase(),qi=lower.indexOf(query.toLowerCase());
+  if(qi===-1)return'';
+  const start=Math.max(0,qi-60),end=Math.min(content.length,qi+query.length+100);
+  let snip=(start>0?'…':'')+content.substring(start,end)+(end<content.length?'…':'');
+  const re=new RegExp('('+query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return snip.replace(re,'<mark>$1</mark>');
+}
+
+function scoreProto(proto,q){
+  if(!q)return 1;
+  const ql=q.toLowerCase(),id=proto.id.toLowerCase(),title=proto.title.toLowerCase(),content=(proto.content||'').toLowerCase();
+  if(id.includes(ql))return 3;
+  if(title.includes(ql))return 2;
+  if(content.includes(ql))return 1;
+  return 0;
+}
+
+function badgesHTML(levels){
+  return(levels||[]).map(l=>`<span class="badge badge-${l}">${LEVEL_MAP[l]||l}</span>`).join('');
+}
+
+function render(){
+  const q=searchQuery;
+  let list=protocols.filter(p=>{
+    if(!matchLevel(p))return false;
+    if(!q)return true;
+    return scoreProto(p,q)>0;
+  });
+  if(q)list.sort((a,b)=>scoreProto(b,q)-scoreProto(a,q));
+  filtered=list;
+
+  const container=$('#listContent');
+  if(!list.length){
+    container.innerHTML='<div class="empty-state"><div class="emoji">🔍</div><p>No protocols found</p></div>';
+    return;
+  }
+
+  let html='';
+  if(q){
+    list.forEach(p=>{
+      const snip=getSnippet(p.content||'',q);
+      html+=`<div class="proto-card" data-id="${p.id}">
+        <div class="proto-id">${p.id}</div>
+        <div class="proto-info">
+          <div class="proto-title">${highlightText(p.title,q)}</div>
+          <div class="proto-badges">${badgesHTML(p.provider_levels)}</div>
+          ${snip?`<div class="search-snippet">${snip}</div>`:''}
+        </div>
+        <span class="chevron">›</span>
+      </div>`;
+    });
+  }else{
+    const sections={};
+    list.forEach(p=>{
+      const s=p.section||'Other';
+      (sections[s]=sections[s]||[]).push(p);
+    });
+    for(const[sec,protos]of Object.entries(sections)){
+      html+=`<div class="section-header">${sec}</div>`;
+      protos.forEach(p=>{
+        html+=`<div class="proto-card" data-id="${p.id}">
+          <div class="proto-id">${p.id}</div>
+          <div class="proto-info">
+            <div class="proto-title">${p.title}</div>
+            <div class="proto-badges">${badgesHTML(p.provider_levels)}</div>
+          </div>
+          <span class="chevron">›</span>
+        </div>`;
+      });
+    }
+  }
+  container.innerHTML=html;
+  container.querySelectorAll('.proto-card').forEach(c=>c.onclick=()=>showDetail(c.dataset.id));
+}
+
+function highlightText(text,q){
+  if(!q)return text;
+  const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return text.replace(re,'<mark>$1</mark>');
+}
+
+function formatContent(content){
+  if(!content)return'<p>No content available.</p>';
+  let html='';
+  const lines=content.split('\n');
+  let inList=false;
+  
+  for(let i=0;i<lines.length;i++){
+    let line=lines[i].trim();
+    if(!line)continue;
+    
+    // Inline provider markers at start of line
+    line=line.replace(/^([EACP])\s*\u20dd/g,(m,l)=>`<span class="inline-badge ib-${l}">${LEVEL_MAP[l]||l}</span>`);
+    line=line.replace(/^(ti)\s*/,'');
+    
+    // Cross-references to other protocols
+    line=line.replace(/(?:Protocol|Appendix)\s+(\d{2}\.\d{2})/g,(m,id)=>{
+      return`<a class="proto-link" data-ref="${id}">${m}</a>`;
+    });
+    
+    // CAUTION blocks
+    if(/^CAUTION/i.test(line)){
+      html+=`<div class="caution-block">⚠️ ${line}</div>`;continue;
+    }
+    // NOTE blocks
+    if(/^NOTE[S]?:/i.test(line)){
+      html+=`<div class="note-block">📝 ${line}</div>`;continue;
+    }
+    // PEARLS
+    if(/^PEARL[S]?/i.test(line)){
+      html+=`<div class="pearls-block">💡 ${line}</div>`;continue;
+    }
+    // Standing order section labels
+    if(/^EMT Standing Orders?/i.test(line)){html+=`<div class="section-label sl-emt">${line}</div>`;continue}
+    if(/^AEMT-C Standing Orders?/i.test(line)){html+=`<div class="section-label sl-aemtc">${line}</div>`;continue}
+    if(/^AEMT Standing Orders?/i.test(line)){html+=`<div class="section-label sl-aemt">${line}</div>`;continue}
+    if(/^Paramedic Standing Orders?/i.test(line)){html+=`<div class="section-label sl-para">${line}</div>`;continue}
+    if(/^Medical Control/i.test(line)){html+=`<div class="section-label sl-mc">${line}</div>`;continue}
+    if(/^Recognition:/i.test(line)){html+=`<div class="section-label sl-mc">${line}</div>`;continue}
+    
+    // Bullets
+    if(line.startsWith('•')||line.startsWith('–')||line.startsWith('-')){
+      if(!inList){html+='<ul>';inList=true}
+      const isSub=line.startsWith('  ')||lines[i].startsWith('  ');
+      html+=`<li class="${isSub?'sub':''}">${line.replace(/^[•–-]\s*/,'')}</li>`;
+      continue;
+    }
+    if(inList){html+='</ul>';inList=false}
+    
+    // Numbered items
+    if(/^\d+\./.test(line)){
+      html+=`<p style="margin:6px 0">${line}</p>`;continue;
+    }
+    
+    html+=`<p style="margin:4px 0">${line}</p>`;
+  }
+  if(inList)html+='</ul>';
+  return html;
+}
+
+function showDetail(id){
+  const proto=protocols.find(p=>p.id===id);
+  if(!proto)return;
+  currentProto=proto;
+  $('#detailId').textContent=proto.id;
+  $('#detailTitle').textContent=proto.title;
+  $('#detailBadges').innerHTML=badgesHTML(proto.provider_levels);
+  $('#detailBody').innerHTML=formatContent(proto.content);
+  
+  // Wire up cross-reference links
+  $('#detailBody').querySelectorAll('.proto-link').forEach(a=>{
+    a.onclick=e=>{e.preventDefault();showDetail(a.dataset.ref)};
+  });
+  
+  $('#listView').classList.add('hidden');
+  $('#detailView').classList.add('active');
+  $('#detailView').querySelector('.detail-content').scrollTop=0;
+}
+
+$('#backBtn').onclick=()=>{
+  $('#detailView').classList.remove('active');
+  $('#listView').classList.remove('hidden');
+  currentProto=null;
+};
+
+// Handle back gesture / button
+window.addEventListener('popstate',()=>{
+  if(currentProto){
+    $('#detailView').classList.remove('active');
+    $('#listView').classList.remove('hidden');
+    currentProto=null;
+  }
+});
+
+// Push state when opening detail
+const origShowDetail=showDetail;
+
+// Register SW
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+})();
+</script>
+</body>
+</html>
